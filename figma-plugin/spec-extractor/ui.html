@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body{margin:0;font:12px ui-sans-serif,-apple-system,Segoe UI,Roboto}
+      .bar{display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid #e5e7eb}
+      .grow{flex:1}
+      textarea{width:100%;height:320px;padding:8px;border:0;outline:none;resize:none;background:#fafafa}
+      button{padding:6px 10px;border:1px solid #111;border-radius:6px;background:#111;color:#fff;cursor:pointer}
+      button.secondary{background:#fff;color:#111}
+      .row{display:flex;gap:8px;align-items:center}
+      .small{font-size:11px;color:#6b7280}
+    </style>
+  </head>
+  <body>
+    <div class="bar" style="flex-direction:column;align-items:stretch">
+      <div class="row">
+        <input id="name" class="grow" placeholder="Component name (used as file name)" />
+      </div>
+      <div class="row">
+        <label class="small">Format:</label>
+        <select id="format">
+          <option value="json" selected>JSON (structured)</option>
+          <option value="text">Text (legacy)</option>
+        </select>
+        <input id="endpoint" class="grow" placeholder="POST endpoint (default http://localhost:3000/api/figma-spec)" />
+        <button id="refresh" class="secondary">Refresh</button>
+        <button id="copy" class="secondary">Copy</button>
+        <button id="send">Send</button>
+      </div>
+    </div>
+    <textarea id="out" spellcheck="false"></textarea>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      onmessage = (e) => {
+        const m = e.data.pluginMessage || {};
+        if (m.error) {
+          $('out').value = `Error: ${m.error}`;
+          return;
+        }
+        if (m.name) $('name').value = m.name;
+        if (m.spec) $('out').value = m.spec;
+        if (typeof m.posted !== 'undefined') {
+          if (m.posted) alert('Sent to app successfully.');
+          else alert('Failed to send: ' + (m.error || 'unknown error'));
+        }
+      };
+      $('refresh').onclick = () => parent.postMessage({ pluginMessage: { action: 'refresh', format: $('format').value } }, '*');
+      $('send').onclick = () => {
+        parent.postMessage({ pluginMessage: { action: 'send', name: $('name').value || 'Spec', content: $('out').value, endpoint: $('endpoint').value } }, '*');
+      };
+      $('copy').onclick = () => { $('out').select(); document.execCommand('copy'); };
+    </script>
+  </body>
+  </html>
+
+
